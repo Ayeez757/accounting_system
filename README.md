@@ -1,0 +1,2 @@
+# accounting_system_of_java_tribe-s_examine
+爪哇部落后端组第一轮考核，要求做一个纯后端的个人记账系统，考核语言本身的东西，我决定用Java写一下。

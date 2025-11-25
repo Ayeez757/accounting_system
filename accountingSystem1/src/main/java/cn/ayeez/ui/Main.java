@@ -14,6 +14,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
+import org.jfree.chart.plot.PiePlot;
+import org.jfree.data.general.DefaultPieDataset;
+
+
+
 import cn.ayeez.javabean.AccountingData;
 
 
@@ -34,6 +43,7 @@ public class Main {
     private CardLayout cardLayout;
 
     public Main(String userName) throws IOException {
+
 
         //记录用户名
         this.userName = userName;
@@ -136,6 +146,7 @@ public class Main {
         return panel;
     }
 
+
     private void addButtonListeners() {
         accountingButton.addActionListener(new ActionListener() {
             @Override
@@ -158,6 +169,23 @@ public class Main {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(rootJPanel, "source");
+
+                //刷新那个饼图
+                Component sourceComponet = null;
+                for (Component component : rootJPanel.getComponents()) {
+                    if (component instanceof SourcePanel){
+                        sourceComponet = component;
+                        break;
+                    }
+                }
+
+                if (sourceComponet != null){
+                    try {
+                        ((SourcePanel)sourceComponet).refreshData();
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
             }
         });
 
@@ -165,6 +193,23 @@ public class Main {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(rootJPanel, "habit");
+
+                // 刷新消费习惯饼图
+                Component habitComponent = null;
+                for (Component component : rootJPanel.getComponents()) {
+                    if (component instanceof HabitPanel){
+                        habitComponent = component;
+                        break;
+                    }
+                }
+
+                if (habitComponent != null){
+                    try {
+                        ((HabitPanel)habitComponent).refreshData();
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
             }
         });
 
@@ -724,20 +769,244 @@ class DetailPanel extends JPanel {
 
 
 class SourcePanel extends JPanel {
-    public SourcePanel() {
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("收入来源面板"));
-        this.add(panel);
+    //把这个挪到构造方法外面方便后面刷新数据
+    private JPanel pieChartPanel;
+
+    /**
+     * 这里存放北边的组件声明
+     * 未开发
+     */
+
+//    private JLabel totalMoneyLabel;
+
+    public SourcePanel() throws IOException {
+        setLayout(new BorderLayout());
+
+        JPanel nameJPanel = new JPanel();
+        nameJPanel.add(new JLabel("收入来源面板"));
+        add(nameJPanel,BorderLayout.NORTH);
+
+        //创建放饼图的面板
+        pieChartPanel = new JPanel(new BorderLayout());
+
+
+        JPanel incomeCategoryPanel = createIncomePieChart();
+        //把饼图面板加到饼图面板的面板[doge]
+        pieChartPanel.add(incomeCategoryPanel,BorderLayout.CENTER);
+
+
+        //把这些东西hangbalan加到根面板中
+        add(pieChartPanel,BorderLayout.CENTER);
+    }
+
+    //创建收入来源的饼图
+    private JPanel createIncomePieChart() throws IOException {
+        Map<String,Double> incomeDate = getCategoryData("收入");
+        //调用创建饼图的方法，把从获取处理数据方法得来的数据丢里面生成饼图并返回
+        return createChartPanel(incomeDate,"收入类型分布");
+    }
+
+    /**
+     * 这个方法用来读数据，解析数据，返回Map<String,Double>
+     */
+    private Map<String,Double> getCategoryData(String type) throws IOException {
+        Map<String,Double> categoryMap = new HashMap<>();
+
+        File file = new File("src\\User\\"+Main.userName);
+        if (!file.exists()){
+            return categoryMap;
+        }
+
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String line;
+
+        while ((line = br.readLine()) != null){
+            String[] split = line.split("&");
+            String recordType = split[0].split("=")[1];
+            Double money = Double.parseDouble(split[1].split("=")[1]);
+            String category = split[3].split("=")[1];
+
+            //只统计指定类型的记录
+            if (recordType.equals( type)){
+                categoryMap.put(category,categoryMap.getOrDefault(category,0.0)+money);
+            }
+        }
+        br.close();
+
+        return categoryMap;
+    }
+
+    //创建饼图面板
+    private JPanel createChartPanel(Map<String,Double> data,String title) {
+
+        //如果是空的饼图
+        if (data.isEmpty()){
+            JPanel emptyJPanel = new JPanel();
+            emptyJPanel.add(new JLabel("没有数据"));
+            return emptyJPanel;
+        }
+
+        //创建饼图数据
+        DefaultPieDataset dataSet = new DefaultPieDataset();
+        for (Map.Entry<String, Double> entry : data.entrySet()) {
+            dataSet.setValue(entry.getKey(), entry.getValue());
+        }
+
+        //创建饼图
+        JFreeChart chart = ChartFactory.createPieChart(
+                title,
+                dataSet,
+                true,//显示图例
+                true,//显示工具提示信息
+                false//不生成URL
+        );
+
+        //配置饼图样式和图例(翻文档累死个人)
+        PiePlot plot = (PiePlot) chart.getPlot();
+        plot.setLabelGenerator(new StandardPieSectionLabelGenerator("{0}:{1}({2})"));
+
+        //设置图例标签生成器
+//        plot.setLegendLabelGenerator(new StandardPieSectionLabelGenerator("{0}:{1}"));
+        //配置饼图样式和图例
+        //这里图例要设置字体啊，不然没有中文，全用框框代替，文档又查不到这个，搞得我查了好久
+        plot.setLabelFont(new Font("SansSerif", Font.PLAIN, 12));
+        plot.setLabelGenerator(new StandardPieSectionLabelGenerator("{0}:{1}({2})"));
+
+        // 设置图例字体
+        chart.getLegend().setItemFont(new Font("SansSerif", Font.PLAIN, 12));
+
+
+
+        //创建图表面板,把饼图塞里面
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new Dimension(400, 300));
+
+
+
+        return chartPanel;
+    }
+
+    //刷新数据的方法
+    public void refreshData() throws IOException {
+        pieChartPanel.removeAll();
+
+        JPanel incomeCategoryPanel = createIncomePieChart();
+        pieChartPanel.add(incomeCategoryPanel,BorderLayout.CENTER);
+        pieChartPanel.revalidate();
+        pieChartPanel.repaint();
+    }
+
+}
+
+//4. 消费习惯面板
+class HabitPanel extends JPanel {
+    private JPanel pieChartPanel;
+
+    public HabitPanel() throws IOException {
+        setLayout(new BorderLayout());
+
+        JPanel nameJPanel = new JPanel();
+        nameJPanel.add(new JLabel("消费习惯面板"));
+        add(nameJPanel, BorderLayout.NORTH);
+
+        //创建放饼图的面板
+        pieChartPanel = new JPanel(new BorderLayout());
+
+        //创建支出分类饼图
+        JPanel expenseCategoryPanel = createExpensePieChart();
+        pieChartPanel.add(expenseCategoryPanel, BorderLayout.CENTER);
+
+        //添加到主面板
+        add(pieChartPanel, BorderLayout.CENTER);
+    }
+
+    //创建支出分类饼图
+    private JPanel createExpensePieChart() throws IOException {
+        // 获取支出数据（注意这里传入"支出"作为筛选条件）
+        Map<String, Double> expenseData = getCategoryData("支出");
+        // 创建饼图面板
+        return createChartPanel(expenseData, "支出分类分布");
+    }
+
+    /**
+     * 这个方法用来读数据，解析数据，返回Map<String,Double>
+     */
+    private Map<String, Double> getCategoryData(String type) throws IOException {
+        Map<String, Double> categoryMap = new HashMap<>();
+
+        File file = new File("src\\User\\" + Main.userName);
+        if (!file.exists()) {
+            return categoryMap;
+        }
+
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String line;
+
+        while ((line = br.readLine()) != null) {
+            String[] split = line.split("&");
+            String recordType = split[0].split("=")[1];
+            Double money = Double.parseDouble(split[1].split("=")[1]);
+            String category = split[3].split("=")[1];
+
+            //只统计指定类型的记录
+            if (recordType.equals(type)) {
+                categoryMap.put(category, categoryMap.getOrDefault(category, 0.0) + money);
+            }
+        }
+        br.close();
+
+        return categoryMap;
+    }
+
+    //创建饼图面板（复用SourcePanel中的方法）
+    private JPanel createChartPanel(Map<String, Double> data, String title) {
+        //如果是空的饼图
+        if (data.isEmpty()) {
+            JPanel emptyJPanel = new JPanel();
+            emptyJPanel.add(new JLabel("没有数据"));
+            return emptyJPanel;
+        }
+
+        //创建饼图数据集
+        DefaultPieDataset dataSet = new DefaultPieDataset();
+        for (Map.Entry<String, Double> entry : data.entrySet()) {
+            dataSet.setValue(entry.getKey(), entry.getValue());
+        }
+
+        //创建饼图
+        JFreeChart chart = ChartFactory.createPieChart(
+                title,
+                dataSet,
+                true,  //显示图例
+                true,  //显示工具提示信息
+                false  //不生成URL
+        );
+
+        //配置饼图样式
+        PiePlot plot = (PiePlot) chart.getPlot();
+        plot.setLabelGenerator(new StandardPieSectionLabelGenerator("{0}:{1}({2})"));
+
+        //设置字体避免中文显示为方块
+        plot.setLabelFont(new Font("SansSerif", Font.PLAIN, 12));
+        chart.getLegend().setItemFont(new Font("SansSerif", Font.PLAIN, 12));
+
+        //创建图表面板
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new Dimension(400, 300));
+
+        return chartPanel;
+    }
+
+    //刷新数据的方法（可选）
+    public void refreshData() throws IOException {
+        pieChartPanel.removeAll();
+        JPanel expenseCategoryPanel = createExpensePieChart();
+        pieChartPanel.add(expenseCategoryPanel, BorderLayout.CENTER);
+        pieChartPanel.revalidate();
+        pieChartPanel.repaint();
     }
 }
 
-class HabitPanel extends JPanel {
-    public HabitPanel() {
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("消费习惯面板"));
-        this.add(panel);
-    }
-}
 
 class AnalyzePanel extends JPanel {
     public AnalyzePanel() {

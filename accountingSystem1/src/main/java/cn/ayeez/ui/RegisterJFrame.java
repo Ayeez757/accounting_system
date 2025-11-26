@@ -104,6 +104,7 @@ public class RegisterJFrame {
                     "&password="+registerPasswordField.getText()+"\n");
             fileWriter.close();
 
+            JOptionPane.showMessageDialog(null, "注册成功，请返回登录");
             System.out.println("注册成功");
             return true;
             //没问题

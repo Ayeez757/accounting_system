@@ -1,0 +1,23 @@
+<component name="ArtifactManager">
+  <artifact name="accountingSystem1:jar2">
+    <output-path>$PROJECT_DIR$/out/artifacts/accountingSystem1_jar2</output-path>
+    <root id="root">
+      <element id="archive" name="accountingSystem1.jar">
+        <element id="directory" name="META-INF">
+          <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
+        </element>
+        <element id="module-output" name="accountingSystem1" />
+      </element>
+      <element id="library" level="project" name="Maven: com.jgoodies:forms:1.1-preview" />
+      <element id="library" level="project" name="Maven: asm:asm:3.0" />
+      <element id="library" level="project" name="Maven: com.jgoodies:jgoodies-common:1.8.1" />
+      <element id="library" level="project" name="Maven: asm:asm-tree:3.0" />
+      <element id="library" level="project" name="Maven: jdom:jdom:1.0" />
+      <element id="library" level="project" name="Maven: asm:asm-commons:3.0" />
+      <element id="library" level="project" name="Maven: org.jfree:jfreechart:1.5.3" />
+      <element id="library" level="project" name="Maven: com.jgoodies:jgoodies-forms:1.9.0" />
+      <element id="library" level="project" name="Maven: com.intellij:forms_rt:7.0.3" />
+      <element id="library" level="project" name="Maven: cn.hutool:hutool-all:5.3.0" />
+    </root>
+  </artifact>
+</component>

@@ -769,6 +769,15 @@ class DetailPanel extends JPanel {
 
 
 class SourcePanel extends JPanel {
+
+
+
+
+
+
+
+
+
     //把这个挪到构造方法外面方便后面刷新数据
     private JPanel pieChartPanel;
 
@@ -780,6 +789,13 @@ class SourcePanel extends JPanel {
 //    private JLabel totalMoneyLabel;
 
     public SourcePanel() throws IOException {
+
+        /**
+         *      * 本来是打算把这个统计次数也放到饼图里面的，但是这个饼图没用熟练，这东西查文档过于麻烦
+         *      * 所以打算改一下布局，让这个SourcePanel.CENTER里面再塞一个JPanel，然后flow布局，左边放统计信息，饼图放右边
+         *      未完成
+         */
+
         setLayout(new BorderLayout());
 
         JPanel nameJPanel = new JPanel();
@@ -794,6 +810,26 @@ class SourcePanel extends JPanel {
         //把饼图面板加到饼图面板的面板[doge]
         pieChartPanel.add(incomeCategoryPanel,BorderLayout.CENTER);
 
+//        ///这个是同时存放饼图和统计信息的面版，后来加的
+//        JPanel rootJPanel =new JPanel();
+//        rootJPanel.setLayout(new FlowLayout());
+//        //创建一个信息面板,这里面用网格的方式来布局
+//        JPanel sourceInfoPanel = new JPanel();
+//        sourceInfoPanel.setLayout(new GridBagLayout());
+//        //加到根面板中
+//        rootJPanel.add(sourceInfoPanel);
+//        //然后把饼图面板加到根面板中
+//        rootJPanel.add(pieChartPanel);
+//
+//        add(rootJPanel,BorderLayout.CENTER);
+//
+//        GridBagConstraints gbc = new GridBagConstraints();
+//        gbc.gridx = 0;
+//        gbc.gridy = 0;
+//        sourceInfoPanel.add(new JLabel("各个收入来源"),gbc);
+//        gbc.gridy = 1;
+//
+
 
         //把这些东西hangbalan加到根面板中
         add(pieChartPanel,BorderLayout.CENTER);
@@ -801,16 +837,20 @@ class SourcePanel extends JPanel {
 
     //创建收入来源的饼图
     private JPanel createIncomePieChart() throws IOException {
-        Map<String,Double> incomeDate = getCategoryData("收入");
+        Map<String,Double> incomeData = getCategoryData("收入");
+        Map<String, Integer> incomeCounts = getCategoryCounts("收入");
         //调用创建饼图的方法，把从获取处理数据方法得来的数据丢里面生成饼图并返回
-        return createChartPanel(incomeDate,"收入类型分布");
+        return createChartPanel(incomeData,incomeCounts,"收入类型分布");
     }
 
     /**
      * 这个方法用来读数据，解析数据，返回Map<String,Double>
+     * 本来是打算把这个统计次数也放到饼图里面的，但是这个饼图没用熟练，这东西查文档过于麻烦
+     * 所以打算改一下布局，让这个SourcePanel.CENTER里面再塞一个JPanel，然后flow布局，左边放统计信息，饼图放右边
      */
     private Map<String,Double> getCategoryData(String type) throws IOException {
         Map<String,Double> categoryMap = new HashMap<>();
+//        Map<String,Integer> countMap = new HashMap<>();
 
         File file = new File("src\\User\\"+Main.userName);
         if (!file.exists()){
@@ -826,18 +866,49 @@ class SourcePanel extends JPanel {
             Double money = Double.parseDouble(split[1].split("=")[1]);
             String category = split[3].split("=")[1];
 
-            //只统计指定类型的记录
+            //只统计指定类型的金额
             if (recordType.equals( type)){
                 categoryMap.put(category,categoryMap.getOrDefault(category,0.0)+money);
             }
+
         }
         br.close();
 
         return categoryMap;
     }
 
+    //发现还要统计次数我没写，懒得修改原有代码，直接从getCategoryData复制粘贴一个新的getCategoryCount
+    //然后到时候在饼图那里合并一下数据
+    // 在 SourcePanel 中添加新方法
+private Map<String, Integer> getCategoryCounts(String type) throws IOException {
+    Map<String, Integer> countMap = new HashMap<>();
+
+    File file = new File("src\\User\\" + Main.userName);
+    if (!file.exists()) {
+        return countMap;
+    }
+
+    BufferedReader br = new BufferedReader(new FileReader(file));
+    String line;
+
+    while ((line = br.readLine()) != null) {
+        String[] split = line.split("&");
+        String recordType = split[0].split("=")[1];
+        String category = split[3].split("=")[1];
+
+        // 只统计指定类型的次数
+        if (recordType.equals(type)) {
+            countMap.put(category, countMap.getOrDefault(category, 0) + 1);
+        }
+    }
+    br.close();
+
+    return countMap;
+}
+
+
     //创建饼图面板
-    private JPanel createChartPanel(Map<String,Double> data,String title) {
+    private JPanel createChartPanel(Map<String,Double> data,Map<String,Integer> counts,String title) {
 
         //如果是空的饼图
         if (data.isEmpty()){
@@ -972,6 +1043,8 @@ class HabitPanel extends JPanel {
         for (Map.Entry<String, Double> entry : data.entrySet()) {
             dataSet.setValue(entry.getKey(), entry.getValue());
         }
+
+
 
         //创建饼图
         JFreeChart chart = ChartFactory.createPieChart(

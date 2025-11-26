@@ -1,6 +1,7 @@
+
 # 个人记账系统
 ### 前言
-脑子抽了才会用swing写考核.......
+脑子抽了才会用swing写考核.......<br>
 登录和注册界面用的是swing ui designer插件，这个东西可能是我没用习惯，我感觉还没手搓好用，然后我主界面以及几个功能面板都是手搓的，饼图用到了jfree，这个还挺好用，就是找不到什么资料。整个考核我写的非常简陋，就只完成了基础功能，以及考核进阶要求里面的数据持久化，一共写了刚好两天半，最后半天用来写这个README和完善了一些细节。
 ### 项目介绍与完整功能
 这是一个个人记账系统（纯垃圾，有写ui是因为本来想着自己用的，越写越觉得愚蠢）
@@ -48,10 +49,10 @@
 4. jfree这是用来生成图表的，饼图由这个生成
 5. 好像也没什么技术含量了.......就是用Java写ui点烦人......
 ### 使用提醒：
-GitHub仓库链接：[点击跳转](https://github.com/Ayeez757/accounting_system)
-项目main分支的accountSystem1里，其他的文件不是。
-程序入口在accountingSystem1/src/main/java/cn/ayeez/App.java
-提供一个样板账号密码：
+GitHub仓库链接：[点击跳转](https://github.com/Ayeez757/accounting_system)<br>
+项目main分支的accountSystem1里，其他的文件不是。<br>
+程序入口在accountingSystem1/src/main/java/cn/ayeez/App.java<br>
+提供一个样板账号密码：<br>
 - 账号：阿叶Ayeez
 - 密码：123456
 

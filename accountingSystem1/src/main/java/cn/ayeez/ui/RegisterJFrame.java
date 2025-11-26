@@ -21,7 +21,7 @@ public class RegisterJFrame {
 
     public RegisterJFrame(){
         //页面初始化信息
-        JFrame jFrame = new JFrame("登录界面");
+        JFrame jFrame = new JFrame("注册界面");
 //        LoginJFrame loginJFrame = new LoginJFrame();
         RegisterJFrame registerJFrame = this;
         jFrame.setContentPane(registerJFrame.rootJPanel);
